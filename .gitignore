@@ -1,0 +1,28 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+*.swp
+*.sqlite
+*.db
+*.db-shm
+*.db-wal
+.vs/
+.vscode/
+.idea/
+*.DotSettings.user
+
+## NuGet
+packages/
+*.nupkg
+
+## Test results
+TestResults/
+*.trx
+*.coverage
+coverage.*
