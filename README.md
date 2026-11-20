@@ -29,7 +29,7 @@ tests/
 ### Key Design Decisions
 
 - **Order is the aggregate root** — enforces invariants (can't cancel shipped orders)
-- **CQRS via MediatR** — commands and queries are separate, each with its own handler
+- **CQRS via MediatR** — commands and queries are separate, each with its own handler. Pinned to **MediatR 12.x** (Apache 2.0); versions 13+ are commercially licensed, so don't upgrade without reviewing [their license](https://mediatr.io/)
 - **Pipeline behaviors** — cross-cutting concerns (logging, validation) decorate handler execution
 - **EF Core + SQLite** — zero-config database for development; swappable to any EF Core provider
 - **JWT authentication** — token-based auth with a login endpoint
@@ -122,7 +122,6 @@ This is not production-ready:
 - Login credentials are hardcoded, and the JWT secret is committed in `appsettings.json`. Replace both before deploying anywhere.
 - No migrations: schema changes require deleting the database.
 - Order status only moves from `Pending` to `Cancelled`. There are no endpoints yet to confirm, ship, or deliver orders.
-- MediatR 13+ is commercially licensed. Check that its license terms fit your use before using this in production.
 
 ## License
 
