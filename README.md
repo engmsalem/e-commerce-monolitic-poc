@@ -13,7 +13,7 @@ src/
 
 tests/
 ├── ECommercePoc.Domain.Tests/       xUnit — domain logic
-├── ECommercePoc.Application.Tests/  xUnit + NSubstitute — handlers & validators
+├── ECommercePoc.Application.Tests/  xUnit + Moq — handlers & validators
 └── ECommercePoc.Api.Tests/          xUnit + WebApplicationFactory — integration tests
 ```
 
@@ -37,7 +37,7 @@ tests/
 
 ## Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (or a newer SDK **plus** the .NET 8 / ASP.NET Core 8 runtime — the projects target `net8.0`, so tests and the API need the 8.0 runtime to run)
 
 ## Quick Start
 
@@ -52,11 +52,40 @@ dotnet build
 # Run tests
 dotnet test
 
-# Start the API
+# Start the API (http profile)
 dotnet run --project src/ECommercePoc.Api
+
+# ...or with HTTPS
+dotnet run --project src/ECommercePoc.Api --launch-profile https
 ```
 
-The API starts at `https://localhost:7001` (Swagger UI at `/swagger`).
+The API listens on `http://localhost:5251` (and `https://localhost:7082` with the `https` profile). Swagger UI is at `/swagger` and is only enabled in the `Development` environment, which the launch profiles set.
+
+## Authentication
+
+The POC uses hardcoded credentials (no user store):
+
+| Username | Password |
+|----------|----------|
+| `admin`  | `admin123` |
+
+```bash
+curl -X POST http://localhost:5251/api/v1/auth/login   -H "Content-Type: application/json"   -d '{"username":"admin","password":"admin123"}'
+```
+
+The response contains a `token` (valid for 1 hour). Send it on protected endpoints as `Authorization: Bearer <token>`.
+
+## Example: Place an Order
+
+1. Get product IDs from `GET /api/v1/products`.
+2. Get the seeded customer ID from the startup log (`Seeded 5 products and 1 customer (ID: ...)`). There's no customer endpoint yet.
+3. Create the order:
+
+```bash
+curl -X POST http://localhost:5251/api/v1/orders   -H "Authorization: Bearer <token>"   -H "Content-Type: application/json"   -d '{"customerId":"<customer-id>","items":[{"productId":"<product-id>","quantity":2}]}'
+```
+
+Errors come back as RFC 7807 `application/problem+json`: `400` for validation failures and business-rule violations, `404` for missing resources, `500` for anything else.
 
 ## API Endpoints
 
@@ -67,12 +96,36 @@ The API starts at `https://localhost:7001` (Swagger UI at `/swagger`).
 | `POST` | `/api/v1/products` | Yes | Create a product |
 | `GET` | `/api/v1/orders/{id}` | Yes | Get an order by ID |
 | `POST` | `/api/v1/orders` | Yes | Create a new order |
-| `DELETE` | `/api/v1/orders/{id}` | Yes | Cancel an order |
+| `POST` | `/api/v1/orders/{id}/cancel` | Yes | Cancel an order (fails if already shipped or cancelled) |
 
 ## Database
 
-Uses SQLite by default (`ECommercePoc.db` created at startup). The `DataSeeder` populates sample products and a test customer on first run.
+Uses SQLite by default (`ECommercePoc.db`, created in the working directory at startup via `EnsureCreated` — there are no EF Core migrations yet). The `DataSeeder` adds 5 sample products and one test customer (Jane Smith) on first run. Delete the `.db` file to reset.
+
+The connection string lives in `ConnectionStrings:Default` in `appsettings.json`.
+
+## Configuration
+
+| Key | Default | Notes |
+|-----|---------|-------|
+| `ConnectionStrings:Default` | `Data Source=ECommercePoc.db` | SQLite connection string |
+| `Jwt:Secret` | POC value in `appsettings.json` | Signing key, at least 32 characters |
+| `Jwt:Issuer` | `ECommercePoc` | |
+| `Jwt:Audience` | `ECommercePoc.Api` | |
+
+Any key can be overridden with environment variables (e.g. `Jwt__Secret`) or `dotnet user-secrets`.
+
+## Limitations (POC)
+
+This is not production-ready:
+
+- Login credentials are hardcoded, and the JWT secret is committed in `appsettings.json`. Replace both before deploying anywhere.
+- No migrations: schema changes require deleting the database.
+- Order status only moves from `Pending` to `Cancelled`. There are no endpoints yet to confirm, ship, or deliver orders.
+- MediatR 13+ is commercially licensed. Check that its license terms fit your use before using this in production.
 
 ## License
 
-This is a proof-of-concept project — use freely as a reference or starting point.
+Licensed under the [Apache License 2.0](LICENSE).
+
+Copyright 2026 engmsalem
