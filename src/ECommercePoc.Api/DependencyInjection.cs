@@ -1,5 +1,6 @@
 using System.Text;
 using Asp.Versioning;
+using ECommercePoc.Api.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -22,7 +23,14 @@ public static class DependencyInjection
             options.AssumeDefaultVersionWhenUnspecified = true;
             options.ReportApiVersions = true;
         })
-        .AddMvc();
+        .AddMvc()
+        .AddApiExplorer(options =>
+        {
+            // Group endpoints as "v1" (matching the Swagger doc name) and replace the
+            // {version} route token with the actual version in the generated document.
+            options.GroupNameFormat = "'v'VVV";
+            options.SubstituteApiVersionInUrl = true;
+        });
 
         AddJwtAuthentication(services, configuration);
         AddSwagger(services);
@@ -65,15 +73,17 @@ public static class DependencyInjection
                 Description = "Clean Architecture POC for e-commerce order processing"
             });
 
-            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            options.AddSecurityDefinition(AuthorizeOperationFilter.SchemeName, new OpenApiSecurityScheme
             {
                 Name = "Authorization",
                 Type = SecuritySchemeType.Http,
                 Scheme = "bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "Enter your JWT token"
+                Description = "Paste the token from POST /api/v1/auth/login (without the 'Bearer ' prefix)"
             });
+
+            options.OperationFilter<AuthorizeOperationFilter>();
         });
     }
 }
