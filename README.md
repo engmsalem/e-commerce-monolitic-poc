@@ -75,6 +75,8 @@ curl -X POST http://localhost:5251/api/v1/auth/login   -H "Content-Type: applica
 
 The response contains a `token` (valid for 1 hour). Send it on protected endpoints as `Authorization: Bearer <token>`.
 
+In Swagger UI, click **Authorize**, paste the token (without the `Bearer ` prefix), and protected endpoints (marked with a lock) will send it automatically.
+
 ## Example: Place an Order
 
 1. Get product IDs from `GET /api/v1/products`.
