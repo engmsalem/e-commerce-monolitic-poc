@@ -140,6 +140,9 @@ check "create invalid product -> 400" 400 "Validation Failed"
 request POST "$API/products" '{"name":"Smoke Test Product","description":"Created by smoke-test.sh","price":9.99,"currency":"USD","sku":"'"$SMOKE_SKU"'"}' "$TOKEN"
 check "create product -> 201" 201 "\"sku\":\"$SMOKE_SKU\""
 
+request POST "$API/products" '{"name":"Smoke Test Product","description":"Created by smoke-test.sh","price":9.99,"currency":"USD","sku":"'"$SMOKE_SKU"'"}' "$TOKEN"
+check "create product with duplicate SKU -> 409" 409 "already exists"
+
 # Orders
 request POST "$API/orders" "{\"customerId\":\"$CUSTOMER_ID\",\"items\":[]}" "$TOKEN"
 check "create empty order -> 400" 400 "Order must contain at least one item."
