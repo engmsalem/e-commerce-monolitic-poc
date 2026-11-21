@@ -1,4 +1,5 @@
 using ECommercePoc.Application.Dtos;
+using ECommercePoc.Application.Exceptions;
 using ECommercePoc.Application.Interfaces;
 using ECommercePoc.Domain.Entities;
 using ECommercePoc.Domain.ValueObjects;
@@ -19,6 +20,10 @@ public sealed class CreateProductHandler : IRequestHandler<CreateProductCommand,
 
     public async Task<ProductDto> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
+        // SKU has a unique index; check first so a duplicate is a 409, not a database error (500).
+        if (await _productRepository.ExistsBySkuAsync(request.Sku, cancellationToken))
+            throw new ConflictException($"A product with SKU '{request.Sku}' already exists.");
+
         var price = new Money(request.Price, request.Currency);
         var product = new Product(request.Name, request.Description, price, request.Sku);
 

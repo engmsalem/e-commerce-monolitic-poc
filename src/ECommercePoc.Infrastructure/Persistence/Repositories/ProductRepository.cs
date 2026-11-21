@@ -23,6 +23,11 @@ public sealed class ProductRepository : IProductRepository
         return await _context.Products.AsNoTracking().ToListAsync(cancellationToken);
     }
 
+    public async Task<bool> ExistsBySkuAsync(string sku, CancellationToken cancellationToken = default)
+    {
+        return await _context.Products.AnyAsync(p => p.Sku == sku, cancellationToken);
+    }
+
     public async Task AddAsync(Product product, CancellationToken cancellationToken = default)
     {
         await _context.Products.AddAsync(product, cancellationToken);

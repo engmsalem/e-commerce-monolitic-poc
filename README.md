@@ -97,7 +97,7 @@ Errors come back as RFC 7807 `application/problem+json`: `400` for validation fa
 ## Testing the API
 
 - **[Runbook](docs/RUNBOOK.md):** curl calls for every endpoint with real responses, all error cases, and troubleshooting.
-- **Smoke test:** `./scripts/smoke-test.sh` builds the API, starts it on port 5299 with a throwaway database, runs 15 end-to-end checks, and stops it. It needs only `bash` and `curl`.
+- **Smoke test:** `./scripts/smoke-test.sh` builds the API, starts it on port 5299 with a throwaway database, runs 16 end-to-end checks, and stops it. It needs only `bash` and `curl`.
 - **[`ECommercePoc.Api.http`](src/ECommercePoc.Api/ECommercePoc.Api.http):** clickable requests for Visual Studio, Rider, or VS Code REST Client.
 - **Unit and integration tests:** `dotnet test`.
 

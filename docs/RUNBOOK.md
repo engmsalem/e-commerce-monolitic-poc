@@ -190,6 +190,7 @@ Errors are returned as RFC 7807 problem details (`application/problem+json`), ex
 | Unknown order | `GET /orders/{random-guid}` | `404` | Resource Not Found: `Order with id '...' was not found.` |
 | Cancel twice | `POST /orders/{id}/cancel` on a cancelled order | `400` | Business Rule Violation: `Order is already cancelled.` |
 | Invalid product | `POST /products` with `{"name":"","price":-1,"sku":""}` | `400` | Validation Failed: `Name: Product name is required.`, `Price: Price must be greater than zero.`, `Sku: SKU is required.` |
+| Duplicate SKU | `POST /products` with a SKU that already exists | `409` | Conflict: `A product with SKU '...' already exists.` |
 | Missing version in URL | `GET /api/products` | `404` | *(empty body)*. Always include `/v1/`. |
 
 Example (cancel twice):
@@ -227,6 +228,5 @@ Seeing the HTTP status: add `-w " [%{http_code}]\n"` to any curl command, or use
 
 | Issue | Behavior | Workaround |
 |-------|----------|------------|
-| Duplicate SKU returns `500` | `POST /products` with a SKU that already exists hits the database's unique index on `Sku` and returns `500 Internal Server Error` instead of a `409 Conflict`. | Use a unique SKU. The smoke test generates one per run. |
 | `createdDate` loses its `Z` suffix | Create returns `...Z`, later reads don't, because SQLite doesn't store the UTC marker | Treat the value as UTC |
 | No way to look up customers | There's no customer endpoint, and the seeded ID is only logged on first start | Reset the database to see it again |

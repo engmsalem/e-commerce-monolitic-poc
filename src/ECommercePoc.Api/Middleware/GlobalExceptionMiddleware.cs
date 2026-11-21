@@ -9,7 +9,7 @@ namespace ECommercePoc.Api.Middleware;
 
 /// <summary>
 /// Global error handling middleware.
-/// Maps DomainException → 400, NotFoundException → 404, ValidationException → 400,
+/// Maps DomainException → 400, NotFoundException → 404, ConflictException → 409, ValidationException → 400,
 /// unhandled → 500. Returns RFC 7807 ProblemDetails.
 /// </summary>
 public sealed class GlobalExceptionMiddleware
@@ -42,6 +42,7 @@ public sealed class GlobalExceptionMiddleware
         {
             DomainException => (HttpStatusCode.BadRequest, "Business Rule Violation", exception.Message),
             NotFoundException => (HttpStatusCode.NotFound, "Resource Not Found", exception.Message),
+            ConflictException => (HttpStatusCode.Conflict, "Conflict", exception.Message),
             ValidationException => (HttpStatusCode.BadRequest, "Validation Failed", exception.Message),
             _ => (HttpStatusCode.InternalServerError, "Internal Server Error",
                 "An unexpected error occurred. Please try again later.")
