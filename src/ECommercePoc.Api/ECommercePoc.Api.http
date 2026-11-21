@@ -1,6 +1,95 @@
-@ECommercePoc.Api_HostAddress = http://localhost:5251
+# Requests for Visual Studio 2022 (17.12+), JetBrains Rider, or VS Code REST Client.
+# 1. Start the API: dotnet run --project src/ECommercePoc.Api
+# 2. Set @customerId below to the ID from the startup log ("Seeded 5 products and 1 customer (ID: ...)")
+# 3. Run "login" first. Later requests reuse its token and the IDs from earlier responses.
+# See docs/RUNBOOK.md for expected responses and error cases.
 
-GET {{ECommercePoc.Api_HostAddress}}/weatherforecast/
+@host = http://localhost:5251
+@baseUrl = {{host}}/api/v1
+@customerId = 00000000-0000-0000-0000-000000000000
+
+### Log in (POC credentials)
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### List products (anonymous)
+# @name products
+GET {{baseUrl}}/products
 Accept: application/json
 
-###
+### Create a product
+# @name createProduct
+POST {{baseUrl}}/products
+Authorization: Bearer {{login.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "Laptop Stand",
+  "description": "Adjustable aluminium laptop stand",
+  "price": 39.99,
+  "currency": "USD",
+  "sku": "LS-006"
+}
+
+### Create an order using the first product
+# @name createOrder
+POST {{baseUrl}}/orders
+Authorization: Bearer {{login.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "customerId": "{{customerId}}",
+  "items": [
+    { "productId": "{{products.response.body.$[0].id}}", "quantity": 2 }
+  ]
+}
+
+### Get the order
+GET {{baseUrl}}/orders/{{createOrder.response.body.$.id}}
+Authorization: Bearer {{login.response.body.$.token}}
+
+### Cancel the order
+POST {{baseUrl}}/orders/{{createOrder.response.body.$.id}}/cancel
+Authorization: Bearer {{login.response.body.$.token}}
+
+### Cancel again: expect 400 "Order is already cancelled."
+POST {{baseUrl}}/orders/{{createOrder.response.body.$.id}}/cancel
+Authorization: Bearer {{login.response.body.$.token}}
+
+### Error: wrong password, expect 400
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "wrong"
+}
+
+### Error: no token, expect 401
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+  "customerId": "{{customerId}}",
+  "items": []
+}
+
+### Error: empty order, expect 400 validation failure
+POST {{baseUrl}}/orders
+Authorization: Bearer {{login.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "customerId": "{{customerId}}",
+  "items": []
+}
+
+### Error: unknown order, expect 404
+GET {{baseUrl}}/orders/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{login.response.body.$.token}}

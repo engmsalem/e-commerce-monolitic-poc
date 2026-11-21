@@ -70,7 +70,9 @@ The POC uses hardcoded credentials (no user store):
 | `admin`  | `admin123` |
 
 ```bash
-curl -X POST http://localhost:5251/api/v1/auth/login   -H "Content-Type: application/json"   -d '{"username":"admin","password":"admin123"}'
+curl -X POST http://localhost:5251/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
 ```
 
 The response contains a `token` (valid for 1 hour). Send it on protected endpoints as `Authorization: Bearer <token>`.
@@ -84,10 +86,20 @@ In Swagger UI, click **Authorize**, paste the token (without the `Bearer ` prefi
 3. Create the order:
 
 ```bash
-curl -X POST http://localhost:5251/api/v1/orders   -H "Authorization: Bearer <token>"   -H "Content-Type: application/json"   -d '{"customerId":"<customer-id>","items":[{"productId":"<product-id>","quantity":2}]}'
+curl -X POST http://localhost:5251/api/v1/orders \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"customerId":"<customer-id>","items":[{"productId":"<product-id>","quantity":2}]}'
 ```
 
 Errors come back as RFC 7807 `application/problem+json`: `400` for validation failures and business-rule violations, `404` for missing resources, `500` for anything else.
+
+## Testing the API
+
+- **[Runbook](docs/RUNBOOK.md):** curl calls for every endpoint with real responses, all error cases, and troubleshooting.
+- **Smoke test:** `./scripts/smoke-test.sh` builds the API, starts it on port 5299 with a throwaway database, runs 15 end-to-end checks, and stops it. It needs only `bash` and `curl`.
+- **[`ECommercePoc.Api.http`](src/ECommercePoc.Api/ECommercePoc.Api.http):** clickable requests for Visual Studio, Rider, or VS Code REST Client.
+- **Unit and integration tests:** `dotnet test`.
 
 ## API Endpoints
 
@@ -102,7 +114,7 @@ Errors come back as RFC 7807 `application/problem+json`: `400` for validation fa
 
 ## Database
 
-Uses SQLite by default (`ECommercePoc.db`, created in the working directory at startup via `EnsureCreated` — there are no EF Core migrations yet). The `DataSeeder` adds 5 sample products and one test customer (Jane Smith) on first run. Delete the `.db` file to reset.
+Uses SQLite by default. The database is created at startup via `EnsureCreated` (there are no EF Core migrations yet), in the process's working directory. With `dotnet run --project src/ECommercePoc.Api`, that's `src/ECommercePoc.Api/ECommercePoc.db`. The `DataSeeder` adds 5 sample products and one test customer (Jane Smith) on first run, and logs the customer's ID only then. Delete `ECommercePoc.db*` to reset.
 
 The connection string lives in `ConnectionStrings:Default` in `appsettings.json`.
 
